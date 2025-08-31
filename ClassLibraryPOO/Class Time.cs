@@ -5,7 +5,7 @@
     using System.ComponentModel;
     using System.Security.Cryptography.X509Certificates;
 
-    public class Time
+    public class MyTime
     {
         private int hours;
         private int minutes;
@@ -13,12 +13,12 @@
         private int milliseconds;
 
         //Constructor (#1) sin parámetros
-        public Time(int hours, int minutes, int seconds, int milliseconds)
+        public MyTime(int hours, int minutes, int seconds, int milliseconds)
         {
 
             if (!IsValidTime(hours, minutes, seconds, milliseconds))
             {
-                throw new ArgumentException($"The hour: {hours}, is not valid.");
+                throw new ArgumentException($" The hour: {hours}, is not valid.");
             }
 
             this.hours = hours;
@@ -55,32 +55,43 @@
         }
 
         // Método Add
-        public Time Add(Time other, out bool isOtherDay)
+        public MyTime Add(MyTime other, out bool isOtherDay)
         {
             long totalMs = this.ToMilliseconds() + other.ToMilliseconds();
+            long msInDay = 24 * 3600000; // Milisegundos en un día
 
-            // Un día en milisegundos
-            long msInDay = 24 * 3600000;
-
+            // Determinar si pasa a otro día
             isOtherDay = totalMs >= msInDay;
-            totalMs %= msInDay;
 
-            int newHours = (int)(totalMs / 3600000);
-            totalMs %= 3600000;
+            // Calcular el tiempo normalizado (siempre entre 0-23 horas)
+            long remainingMs = totalMs % msInDay;
 
-            int newMinutes = (int)(totalMs / 60000);
-            totalMs %= 60000;
+            int newHours = (int)(remainingMs / 3600000);
+            remainingMs %= 3600000;
 
-            int newSeconds = (int)(totalMs / 1000);
-            int newMilliseconds = (int)(totalMs % 1000);
+            int newMinutes = (int)(remainingMs / 60000);
+            remainingMs %= 60000;
 
-            return new Time(newHours, newMinutes, newSeconds, newMilliseconds);
+            int newSeconds = (int)(remainingMs / 1000);
+            int newMilliseconds = (int)(remainingMs % 1000);
+
+            // Ahora newHours siempre estará entre 0-23
+            return new MyTime(newHours, newMinutes, newSeconds, newMilliseconds);
         }
 
-        // Método para mostrar la hora en formato "HH:MM:SS.mmm"
+        // Método para mostrar la hora
         public override string ToString()
         {
-            return $"{hours:D2}:{minutes:D2}:{seconds:D2}.{milliseconds:D3}";
+            //Caso especial: 00:00:00.000 noche
+            if (hours == 0 && minutes == 0 && seconds == 0 && milliseconds ==0 )
+            {
+                return $"00:00:00.000 A.M.";
+            }
+
+            var dateTime = new DateTime(1, 1, 1, hours, minutes, seconds, milliseconds);
+            return dateTime.ToString("hh:mm:ss.fff tt").ToUpper();
+
         }
     }
 }
+
